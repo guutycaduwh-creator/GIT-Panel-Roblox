@@ -120,11 +120,52 @@ local pESP = CreateTab("ESP")
 _G.ESP_Config = { Vida = false, Linhas = false, Nomes = false, Distancia = false, Esqueleto = false, Caixa = false }
 for k, _ in pairs(_G.ESP_Config) do CreateToggle(pESP, "ESP " .. k, function(v) _G.ESP_Config[k] = v end) end
 
-local pPlayer = CreateTab("PLAYER") -- NOVA ABA
+local pPlayer = CreateTab("PLAYER")
 CreateToggle(pPlayer, "Speed (100)", function(v) LocalPlayer.Character.Humanoid.WalkSpeed = v and 100 or 16 end)
 CreateToggle(pPlayer, "Pulo Infinito", function(v) _G.InfJump = v end)
 UserInputService.JumpRequest:Connect(function() if _G.InfJump then LocalPlayer.Character.Humanoid:ChangeState("Jumping") end end)
-CreateToggle(pPlayer, "Fly", function(v) end)
+
+-- Invisibilidade
+local function ToggleInvis(v)
+    local char = LocalPlayer.Character
+    if v and char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = 1
+            end
+        end
+    elseif char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = 0
+            end
+        end
+    end
+end
+CreateToggle(pPlayer, "Invisível (H)", function(v) _G.Invis = v; ToggleInvis(v) end)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.H then
+        _G.Invis = not _G.Invis
+        ToggleInvis(_G.Invis)
+        Notify("Invisibilidade: " .. (_G.Invis and "ON" or "OFF"), true)
+    end
+end)
+
+-- Carregar Jogador (GTA VM Style)
+CreateToggle(pPlayer, "Carregar Jogador", function(v)
+    local target = Players:FindFirstChild(selPlr)
+    if v and target and target.Character then
+        _G.Carrying = true
+        spawn(function()
+            while _G.Carrying and target.Character do
+                target.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
+                task.wait()
+            end
+        end)
+    else
+        _G.Carrying = false
+    end
+end)
 
 local pWorld = CreateTab("MUNDO") -- NOVA ABA
 CreateToggle(pWorld, "Remover Neblina", function(v) game.Lighting.FogEnd = v and 100000 or 1000 end)
